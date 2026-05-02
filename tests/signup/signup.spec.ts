@@ -87,7 +87,7 @@ test.describe("Signup Page", () => {
       page.getByTestId("first-name-input-placeholder"),
     ).toBeVisible();
     await expect(page.getByTestId("last-name-input-placeholder")).toBeVisible();
-    await expect(page.getByTestId("input-placeholder")).toBeVisible();
+    await expect(page.getByTestId("phone-input-placeholder")).toBeVisible();
     await expect(page.getByTestId("select-placeholder")).toBeVisible();
     await expect(page.getByTestId("email-input-placeholder")).toBeVisible();
     await expect(page.getByTestId("password-input-placeholder")).toBeVisible();
@@ -217,11 +217,12 @@ test.describe("Signup Page", () => {
     "submit button label is correct",
     { tag: "@sanity" },
     async ({ page, baseURL }) => {
-      await new SignupPage(page).goto();
+      const signupPage = new SignupPage(page);
+      await signupPage.goto();
       const expected = (baseURL ?? "").includes("/fr")
         ? "Créez votre compte"
         : "Create your account";
-      await expect(new SignupPage(page).submitButton()).toHaveText(expected);
+      await expect(signupPage.submitButton()).toHaveText(expected);
     },
   );
 
@@ -423,7 +424,7 @@ test.describe("Signup Page", () => {
       await expect(page).toHaveURL(/signup/);
 
       // Now navigate away in the same tab and verify back works
-      await page.goto("https://www.nesto.ca");
+      await page.goto("/");
       await page.waitForLoadState();
       await page.goBack();
       await page.waitForURL(/signup/);

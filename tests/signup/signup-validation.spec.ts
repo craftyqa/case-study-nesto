@@ -109,13 +109,15 @@ test.describe("Signup Validation", () => {
     await expect(page.getByText(/12.{1,10}32/)).toBeVisible();
   });
 
-  const securityInputs: [string, string][] = [
-    ["SQL injection", "'; DROP TABLE users;--"],
-    ["XSS string", "<script>alert(1)</script>"],
+  const securityInputs: [string, string, 'firstName' | 'lastName'][] = [
+    ["SQL injection", "'; DROP TABLE users;--", "firstName"],
+    ["XSS string", "<script>alert(1)</script>", "firstName"],
+    ["SQL injection", "'; DROP TABLE users;--", "lastName"],
+    ["XSS string", "<script>alert(1)</script>", "lastName"],
   ];
 
-  for (const [description, value] of securityInputs) {
-    test(`first name field safely handles ${description}`, { tag: "@regression" }, async ({ page }) => {
+  for (const [description, value, field] of securityInputs) {
+    test(`${field} safely handles ${description}`, { tag: "@regression" }, async ({ page }) => {
       let alertFired = false;
       page.on("dialog", async (dialog) => {
         alertFired = true;
@@ -124,9 +126,8 @@ test.describe("Signup Validation", () => {
 
       const signupPage = new SignupPage(page);
       await signupPage.goto();
-      await signupPage.fillForm({ ...validUser(), firstName: value });
+      await signupPage.fillForm({ ...validUser(), [field]: value });
       await signupPage.submit();
-      await page.waitForTimeout(500);
 
       expect(alertFired).toBe(false);
     });

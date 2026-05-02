@@ -54,8 +54,9 @@ test.describe('Signup Accessibility', () => {
     await page.keyboard.press('Tab');
     await expect(signupPage.lastNameInput()).toBeFocused();
 
-    // Phone has a country-code select before the number input — skip over it
+    // country-code prefix select is a tab stop between last name and phone number
     await page.keyboard.press('Tab');
+    await expect(page.locator(':focus')).toBeVisible();
     await page.keyboard.press('Tab');
     await expect(signupPage.phoneInput()).toBeFocused();
 
@@ -80,6 +81,20 @@ test.describe('Signup Accessibility', () => {
       .analyze();
 
     expect(results.violations).toEqual([]);
+  });
+
+  test('form in validation error state has no critical or serious accessibility violations', { tag: '@regression' }, async ({ page }) => {
+    const signupPage = new SignupPage(page);
+    await signupPage.goto();
+    await signupPage.submit();
+    await expect(signupPage.errors.firstName()).toBeVisible();
+
+    const results = await new AxeBuilder({ page }).analyze();
+    const blocking = results.violations.filter(
+      v => v.impact === 'critical' || v.impact === 'serious'
+    );
+
+    expect(blocking).toEqual([]);
   });
 
 });

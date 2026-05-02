@@ -20,11 +20,11 @@ const CANADIAN_AREA_CODES = [
 const CANADIAN_PROVINCES = ['ON', 'QC', 'AB', 'BC', 'MB', 'NB', 'NL', 'NS', 'PE', 'SK'];
 
 function generatePassword(): string {
-  // Requirements: 12–32 chars, one uppercase, one lowercase, one number
+  // Requirements: 12–31 chars, one uppercase, one lowercase, one number
   const lower  = faker.string.alpha({ length: 6, casing: 'lower' });
   const upper  = faker.string.alpha({ length: 2, casing: 'upper' });
   const digits = faker.string.numeric(2);
-  const extra  = faker.string.alpha({ length: 2, casing: 'lower' });
+  const extra  = faker.string.alpha({ length: faker.number.int({ min: 2, max: 12 }), casing: 'lower' });
   return faker.helpers.shuffle([...lower, ...upper, ...digits, ...extra]).join('');
 }
 
