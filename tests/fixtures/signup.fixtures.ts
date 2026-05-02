@@ -34,7 +34,7 @@ export function validUser(): SignupUser {
     lastName:  faker.person.lastName(),
     phone:     `${faker.helpers.arrayElement(CANADIAN_AREA_CODES)}${faker.string.numeric(7)}`,
     region:    faker.helpers.arrayElement(CANADIAN_PROVINCES),
-    email:     `${faker.internet.username()}.${Date.now()}@mailinator.com`,
+    email:     `${faker.internet.username()}.${faker.string.uuid()}@mailinator.com`,
     password:  generatePassword(),
   };
 }

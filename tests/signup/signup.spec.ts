@@ -1,5 +1,6 @@
 import { test, expect } from "../fixtures";
 import { SignupPage } from "../pages/SignupPage";
+import { faker } from "@faker-js/faker";
 import { validUser, SignupUser } from "../fixtures/signup.fixtures";
 import { ACCOUNTS_API } from "../helpers/urls";
 import { waitForAccountsResponse } from "../helpers/network";
@@ -216,7 +217,7 @@ test.describe("Signup Page", () => {
   }> = [
     {
       label: "email with subdomain",
-      overrides: () => ({ email: `user+${Date.now()}@mail.example.com` }),
+      overrides: () => ({ email: `user+${faker.string.uuid()}@mail.example.com` }),
     },
     {
       label: "password exactly 12 chars",
