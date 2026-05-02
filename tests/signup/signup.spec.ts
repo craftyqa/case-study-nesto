@@ -83,13 +83,17 @@ test.describe("Signup Page", () => {
   test("all form labels are visible", { tag: "@sanity" }, async ({ page }) => {
     await new SignupPage(page).goto();
 
-    await expect(page.getByTestId("first-name-input-placeholder")).toBeVisible();
+    await expect(
+      page.getByTestId("first-name-input-placeholder"),
+    ).toBeVisible();
     await expect(page.getByTestId("last-name-input-placeholder")).toBeVisible();
     await expect(page.getByTestId("input-placeholder")).toBeVisible();
     await expect(page.getByTestId("select-placeholder")).toBeVisible();
     await expect(page.getByTestId("email-input-placeholder")).toBeVisible();
     await expect(page.getByTestId("password-input-placeholder")).toBeVisible();
-    await expect(page.getByTestId("passwordConfirmation-input-placeholder")).toBeVisible();
+    await expect(
+      page.getByTestId("passwordConfirmation-input-placeholder"),
+    ).toBeVisible();
     await expect(page.getByTestId("terms-link")).toBeVisible();
     await expect(page.getByTestId("login-link")).toBeVisible();
   });
@@ -106,12 +110,24 @@ test.describe("Signup Page", () => {
 
       await new SignupPage(page).goto();
 
-      await expect(page.getByTestId("first-name-input-placeholder")).toHaveText("First name");
-      await expect(page.getByTestId("last-name-input-placeholder")).toHaveText("Last name");
-      await expect(page.getByTestId("email-input-placeholder")).toHaveText("Email");
-      await expect(page.getByTestId("password-input-placeholder")).toHaveText("Password");
-      await expect(page.getByTestId("passwordConfirmation-input-placeholder")).toHaveText("Confirm password");
-      await expect(page.getByTestId("select-placeholder")).toHaveText("Province of purchase");
+      await expect(page.getByTestId("first-name-input-placeholder")).toHaveText(
+        "First name",
+      );
+      await expect(page.getByTestId("last-name-input-placeholder")).toHaveText(
+        "Last name",
+      );
+      await expect(page.getByTestId("email-input-placeholder")).toHaveText(
+        "Email",
+      );
+      await expect(page.getByTestId("password-input-placeholder")).toHaveText(
+        "Password",
+      );
+      await expect(
+        page.getByTestId("passwordConfirmation-input-placeholder"),
+      ).toHaveText("Confirm password");
+      await expect(page.getByTestId("select-placeholder")).toHaveText(
+        "Province of purchase",
+      );
     },
   );
 
@@ -129,12 +145,24 @@ test.describe("Signup Page", () => {
       await page.getByTestId("header-language-switch").click();
       await page.waitForURL(/\/fr\/signup/);
 
-      await expect(page.getByTestId("first-name-input-placeholder")).toHaveText("Prénom");
-      await expect(page.getByTestId("last-name-input-placeholder")).toHaveText("Nom");
-      await expect(page.getByTestId("email-input-placeholder")).toHaveText("Courriel");
-      await expect(page.getByTestId("password-input-placeholder")).toHaveText("Mot de passe");
-      await expect(page.getByTestId("passwordConfirmation-input-placeholder")).toHaveText("Confirmation du mot de passe");
-      await expect(page.getByTestId("select-placeholder")).toHaveText("Province de l'achat");
+      await expect(page.getByTestId("first-name-input-placeholder")).toHaveText(
+        "Prénom",
+      );
+      await expect(page.getByTestId("last-name-input-placeholder")).toHaveText(
+        "Nom",
+      );
+      await expect(page.getByTestId("email-input-placeholder")).toHaveText(
+        "Courriel",
+      );
+      await expect(page.getByTestId("password-input-placeholder")).toHaveText(
+        "Mot de passe",
+      );
+      await expect(
+        page.getByTestId("passwordConfirmation-input-placeholder"),
+      ).toHaveText("Confirmation du mot de passe");
+      await expect(page.getByTestId("select-placeholder")).toHaveText(
+        "Province de l'achat",
+      );
     },
   );
 
@@ -209,7 +237,9 @@ test.describe("Signup Page", () => {
       await signupPage.lastNameInput().click();
       await signupPage.lastNameInput().fill("Tremblay-Côté");
 
-      await expect(signupPage.firstNameInput()).toHaveValue("Mary-Jane O'Brien");
+      await expect(signupPage.firstNameInput()).toHaveValue(
+        "Mary-Jane O'Brien",
+      );
       await expect(signupPage.lastNameInput()).toHaveValue("Tremblay-Côté");
     },
   );
@@ -243,7 +273,7 @@ test.describe("Signup Page", () => {
       overrides: () => ({ password: "TestPassw0rd" }),
     },
     {
-      label: "password exactly 31 chars (confirmed max)",
+      label: "password exactly 31 chars (max boundary)",
       overrides: () => ({ password: "TestPassword1" + "a".repeat(18) }),
     },
   ];
@@ -273,7 +303,10 @@ test.describe("Signup Page", () => {
     async ({ page }) => {
       await new SignupPage(page).goto();
       // EN: /terms-of-services/  FR: /fr/conditions-d-utilisation/
-      await expect(page.getByTestId("terms-link")).toHaveAttribute("href", /nesto\.ca/);
+      await expect(page.getByTestId("terms-link")).toHaveAttribute(
+        "href",
+        /nesto\.ca/,
+      );
     },
   );
 
@@ -304,20 +337,40 @@ test.describe("Signup Page", () => {
     async ({ page }) => {
       const signupPage = new SignupPage(page);
       await signupPage.goto();
-      await signupPage.fillForm(validUser());
 
       let postCount = 0;
       page.on("request", (req) => {
         if (req.url() === ACCOUNTS_API && req.method() === "POST") postCount++;
       });
 
+      await signupPage.fillForm(validUser());
+
       await Promise.all([
         waitForAccountsResponse(page),
         signupPage.submitButton().dblclick(),
       ]);
-      await page.waitForTimeout(300);
 
       expect(postCount).toBe(1);
+    },
+  );
+
+  test(
+    "checking the consent checkbox sends leadDistributeConsentAgreement as true",
+    { tag: "@regression" },
+    async ({ page }) => {
+      const signupPage = new SignupPage(page);
+      await signupPage.goto();
+      await signupPage.fillForm(validUser());
+      await signupPage.agreementCheckbox().check();
+
+      const [response] = await Promise.all([
+        waitForAccountsResponse(page),
+        signupPage.submit(),
+      ]);
+
+      expect(response!.status()).toBe(201);
+      const { account } = await response!.json();
+      expect(account.leadDistributeConsentAgreement).toBe(true);
     },
   );
 

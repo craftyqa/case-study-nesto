@@ -13,6 +13,7 @@ test.describe("Signup Validation", () => {
     await expect(signupPage.errors.firstName()).toBeVisible();
     await expect(signupPage.errors.lastName()).toBeVisible();
     await expect(signupPage.errors.phone()).toBeVisible();
+    await expect(signupPage.errors.province()).toBeVisible();
     await expect(signupPage.errors.email()).toBeVisible();
     await expect(signupPage.errors.password()).toBeVisible();
   });
