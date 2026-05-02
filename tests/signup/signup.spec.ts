@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../fixtures";
 import { SignupPage } from "../pages/SignupPage";
 import { validUser, SignupUser } from "../fixtures/signup.fixtures";
 import { ACCOUNTS_API } from "../helpers/urls";
@@ -8,10 +8,8 @@ test.describe("Signup Page", () => {
   test(
     "successful signup returns 201 with correct account data and redirects",
     { tag: "@smoke" },
-    async ({ page }) => {
-      const signupPage = new SignupPage(page);
+    async ({ signupPage, page }) => {
       const user = validUser();
-      await signupPage.goto();
       await signupPage.fillForm(user);
 
       const [response] = await Promise.all([
@@ -33,6 +31,8 @@ test.describe("Signup Page", () => {
     },
   );
 
+  // This test must own its navigation: the console listener must be registered
+  // before the page loads, so the signupPage fixture cannot be used here.
   test(
     "page loads with HTTP 200 and no console errors",
     { tag: "@smoke" },
@@ -57,8 +57,7 @@ test.describe("Signup Page", () => {
   test(
     "page title is correct",
     { tag: "@sanity" },
-    async ({ page, baseURL }) => {
-      await new SignupPage(page).goto();
+    async ({ signupPage, page, baseURL }) => {
       const expected = (baseURL ?? "").includes("/fr")
         ? "nesto | Enregistrement"
         : "nesto | Signup";
@@ -69,31 +68,23 @@ test.describe("Signup Page", () => {
   test(
     "signup form is visible on load",
     { tag: "@smoke" },
-    async ({ page }) => {
-      await new SignupPage(page).goto();
+    async ({ signupPage, page }) => {
       await expect(page.locator("form")).toBeVisible();
     },
   );
 
-  test("nesto logo is displayed", { tag: "@sanity" }, async ({ page }) => {
-    await new SignupPage(page).goto();
+  test("nesto logo is displayed", { tag: "@sanity" }, async ({ signupPage, page }) => {
     await expect(page.locator('img[alt="nesto"]')).toBeVisible();
   });
 
-  test("all form labels are visible", { tag: "@sanity" }, async ({ page }) => {
-    await new SignupPage(page).goto();
-
-    await expect(
-      page.getByTestId("first-name-input-placeholder"),
-    ).toBeVisible();
+  test("all form labels are visible", { tag: "@sanity" }, async ({ signupPage, page }) => {
+    await expect(page.getByTestId("first-name-input-placeholder")).toBeVisible();
     await expect(page.getByTestId("last-name-input-placeholder")).toBeVisible();
-    await expect(page.getByTestId("phone-input-placeholder")).toBeVisible();
+    await expect(page.getByTestId("input-placeholder")).toBeVisible();
     await expect(page.getByTestId("select-placeholder")).toBeVisible();
     await expect(page.getByTestId("email-input-placeholder")).toBeVisible();
     await expect(page.getByTestId("password-input-placeholder")).toBeVisible();
-    await expect(
-      page.getByTestId("passwordConfirmation-input-placeholder"),
-    ).toBeVisible();
+    await expect(page.getByTestId("passwordConfirmation-input-placeholder")).toBeVisible();
     await expect(page.getByTestId("terms-link")).toBeVisible();
     await expect(page.getByTestId("login-link")).toBeVisible();
   });
@@ -102,32 +93,18 @@ test.describe("Signup Page", () => {
   test(
     "all labels render in English by default",
     { tag: "@sanity" },
-    async ({ page, baseURL }) => {
+    async ({ signupPage, page, baseURL }) => {
       test.skip(
         (baseURL ?? "").includes("/fr"),
         "Default language on FR projects is French, not English",
       );
 
-      await new SignupPage(page).goto();
-
-      await expect(page.getByTestId("first-name-input-placeholder")).toHaveText(
-        "First name",
-      );
-      await expect(page.getByTestId("last-name-input-placeholder")).toHaveText(
-        "Last name",
-      );
-      await expect(page.getByTestId("email-input-placeholder")).toHaveText(
-        "Email",
-      );
-      await expect(page.getByTestId("password-input-placeholder")).toHaveText(
-        "Password",
-      );
-      await expect(
-        page.getByTestId("passwordConfirmation-input-placeholder"),
-      ).toHaveText("Confirm password");
-      await expect(page.getByTestId("select-placeholder")).toHaveText(
-        "Province of purchase",
-      );
+      await expect(page.getByTestId("first-name-input-placeholder")).toHaveText("First name");
+      await expect(page.getByTestId("last-name-input-placeholder")).toHaveText("Last name");
+      await expect(page.getByTestId("email-input-placeholder")).toHaveText("Email");
+      await expect(page.getByTestId("password-input-placeholder")).toHaveText("Password");
+      await expect(page.getByTestId("passwordConfirmation-input-placeholder")).toHaveText("Confirm password");
+      await expect(page.getByTestId("select-placeholder")).toHaveText("Province of purchase");
     },
   );
 
@@ -135,44 +112,28 @@ test.describe("Signup Page", () => {
   test(
     "labels render in French after clicking the language switch",
     { tag: "@sanity" },
-    async ({ page, baseURL }) => {
+    async ({ signupPage, page, baseURL }) => {
       test.skip(
         (baseURL ?? "").includes("/fr"),
         "EN→FR switch only applies to EN projects",
       );
 
-      await new SignupPage(page).goto();
       await page.getByTestId("header-language-switch").click();
       await page.waitForURL(/\/fr\/signup/);
 
-      await expect(page.getByTestId("first-name-input-placeholder")).toHaveText(
-        "Prénom",
-      );
-      await expect(page.getByTestId("last-name-input-placeholder")).toHaveText(
-        "Nom",
-      );
-      await expect(page.getByTestId("email-input-placeholder")).toHaveText(
-        "Courriel",
-      );
-      await expect(page.getByTestId("password-input-placeholder")).toHaveText(
-        "Mot de passe",
-      );
-      await expect(
-        page.getByTestId("passwordConfirmation-input-placeholder"),
-      ).toHaveText("Confirmation du mot de passe");
-      await expect(page.getByTestId("select-placeholder")).toHaveText(
-        "Province de l'achat",
-      );
+      await expect(page.getByTestId("first-name-input-placeholder")).toHaveText("Prénom");
+      await expect(page.getByTestId("last-name-input-placeholder")).toHaveText("Nom");
+      await expect(page.getByTestId("email-input-placeholder")).toHaveText("Courriel");
+      await expect(page.getByTestId("password-input-placeholder")).toHaveText("Mot de passe");
+      await expect(page.getByTestId("passwordConfirmation-input-placeholder")).toHaveText("Confirmation du mot de passe");
+      await expect(page.getByTestId("select-placeholder")).toHaveText("Province de l'achat");
     },
   );
 
   test(
     "all form fields are visible and enabled",
     { tag: "@smoke" },
-    async ({ page }) => {
-      const signupPage = new SignupPage(page);
-      await signupPage.goto();
-
+    async ({ signupPage }) => {
       const fields = [
         signupPage.firstNameInput(),
         signupPage.lastNameInput(),
@@ -194,10 +155,7 @@ test.describe("Signup Page", () => {
   test(
     "all input fields have placeholder text when empty",
     { tag: "@sanity" },
-    async ({ page }) => {
-      const signupPage = new SignupPage(page);
-      await signupPage.goto();
-
+    async ({ signupPage }) => {
       const inputs = [
         signupPage.firstNameInput(),
         signupPage.lastNameInput(),
@@ -216,9 +174,7 @@ test.describe("Signup Page", () => {
   test(
     "submit button label is correct",
     { tag: "@sanity" },
-    async ({ page, baseURL }) => {
-      const signupPage = new SignupPage(page);
-      await signupPage.goto();
+    async ({ signupPage, baseURL }) => {
       const expected = (baseURL ?? "").includes("/fr")
         ? "Créez votre compte"
         : "Create your account";
@@ -229,18 +185,13 @@ test.describe("Signup Page", () => {
   test(
     "name fields accept alphabetical, accented, hyphenated, and apostrophe characters",
     { tag: "@sanity" },
-    async ({ page }) => {
-      const signupPage = new SignupPage(page);
-      await signupPage.goto();
-
+    async ({ signupPage }) => {
       await signupPage.firstNameInput().click();
       await signupPage.firstNameInput().fill("Mary-Jane O'Brien");
       await signupPage.lastNameInput().click();
       await signupPage.lastNameInput().fill("Tremblay-Côté");
 
-      await expect(signupPage.firstNameInput()).toHaveValue(
-        "Mary-Jane O'Brien",
-      );
+      await expect(signupPage.firstNameInput()).toHaveValue("Mary-Jane O'Brien");
       await expect(signupPage.lastNameInput()).toHaveValue("Tremblay-Côté");
     },
   );
@@ -248,9 +199,7 @@ test.describe("Signup Page", () => {
   test(
     "consent checkbox is unchecked by default and toggles correctly",
     { tag: "@sanity" },
-    async ({ page }) => {
-      const signupPage = new SignupPage(page);
-      await signupPage.goto();
+    async ({ signupPage }) => {
       const checkbox = signupPage.agreementCheckbox();
 
       await expect(checkbox).not.toBeChecked();
@@ -283,9 +232,7 @@ test.describe("Signup Page", () => {
     test(
       `signup succeeds with ${label}`,
       { tag: "@regression" },
-      async ({ page }) => {
-        const signupPage = new SignupPage(page);
-        await signupPage.goto();
+      async ({ signupPage, page }) => {
         await signupPage.fillForm({ ...validUser(), ...overrides() });
 
         const [response] = await Promise.all([
@@ -301,22 +248,16 @@ test.describe("Signup Page", () => {
   test(
     "Terms of Service link points to nesto.ca",
     { tag: "@sanity" },
-    async ({ page }) => {
-      await new SignupPage(page).goto();
+    async ({ signupPage, page }) => {
       // EN: /terms-of-services/  FR: /fr/conditions-d-utilisation/
-      await expect(page.getByTestId("terms-link")).toHaveAttribute(
-        "href",
-        /nesto\.ca/,
-      );
+      await expect(page.getByTestId("terms-link")).toHaveAttribute("href", /nesto\.ca/);
     },
   );
 
   test(
     "submit button is disabled while the API request is in flight",
     { tag: "@regression" },
-    async ({ page }) => {
-      const signupPage = new SignupPage(page);
-      await signupPage.goto();
+    async ({ signupPage, page }) => {
       await signupPage.fillForm(validUser());
 
       await page.route(ACCOUNTS_API, async (route) => {
@@ -335,10 +276,7 @@ test.describe("Signup Page", () => {
   test(
     "double-clicking submit only sends one account creation request",
     { tag: "@regression", retries: 1 },
-    async ({ page }) => {
-      const signupPage = new SignupPage(page);
-      await signupPage.goto();
-
+    async ({ signupPage, page }) => {
       let postCount = 0;
       page.on("request", (req) => {
         if (req.url() === ACCOUNTS_API && req.method() === "POST") postCount++;
@@ -358,9 +296,7 @@ test.describe("Signup Page", () => {
   test(
     "checking the consent checkbox sends leadDistributeConsentAgreement as true",
     { tag: "@regression" },
-    async ({ page }) => {
-      const signupPage = new SignupPage(page);
-      await signupPage.goto();
+    async ({ signupPage, page }) => {
       await signupPage.fillForm(validUser());
       await signupPage.agreementCheckbox().check();
 
@@ -378,7 +314,7 @@ test.describe("Signup Page", () => {
   test(
     "duplicate email returns 400 from the account creation API",
     { tag: "@regression" },
-    async ({ page, browser }) => {
+    async ({ signupPage, page, browser }) => {
       const user = validUser();
 
       // Create the account in a separate, isolated context so the main page
@@ -395,8 +331,6 @@ test.describe("Signup Page", () => {
       await isolatedCtx.close();
 
       // Main page has no auth state — submit the same email and expect 400
-      const signupPage = new SignupPage(page);
-      await signupPage.goto();
       await signupPage.fillForm(user);
       const [dupResponse] = await Promise.all([
         waitForAccountsResponse(page),
@@ -410,9 +344,7 @@ test.describe("Signup Page", () => {
   test(
     "browser back button returns to the signup page",
     { tag: "@regression" },
-    async ({ page }) => {
-      await new SignupPage(page).goto();
-
+    async ({ signupPage, page }) => {
       // Navigate away using the Terms link (stays within nesto.ca, so goBack() is reliable)
       const [termsPage] = await Promise.all([
         page.context().waitForEvent("page"),
@@ -435,15 +367,14 @@ test.describe("Signup Page", () => {
   test(
     "both login links navigate to the login page",
     { tag: "@sanity" },
-    async ({ page }) => {
+    async ({ signupPage, page }) => {
       const loginUrl = /auth\.nesto\.ca\/login/;
 
-      await new SignupPage(page).goto();
       await page.getByTestId("header-login-button").click();
       await page.waitForURL(loginUrl);
       await expect(page).toHaveURL(loginUrl);
 
-      await new SignupPage(page).goto();
+      await signupPage.goto();
       await page.getByTestId("login-link").scrollIntoViewIfNeeded();
       await page.getByTestId("login-link").click();
       await page.waitForURL(loginUrl);

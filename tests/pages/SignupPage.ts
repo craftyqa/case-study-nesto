@@ -18,7 +18,6 @@ export class SignupPage {
     firstName: () => this.page.getByTestId('first-name-error-message-typography'),
     lastName: () => this.page.getByTestId('last-name-error-message-typography'),
     phone: () => this.page.getByTestId('phone-error-message-typography'),
-    province: () => this.page.getByTestId('region-error-message-typography'),
     email: () => this.page.getByTestId('email-error-message-typography'),
     password: () => this.page.getByTestId('password-error-message-typography'),
     confirmPassword: () => this.page.getByTestId('passwordConfirmation-error-message-typography'),

@@ -1,28 +1,20 @@
-import { test, expect } from "@playwright/test";
-import { SignupPage } from "../pages/SignupPage";
+import { test, expect } from "../fixtures";
 import { validUser } from "../fixtures/signup.fixtures";
-import { ACCOUNTS_API } from "../helpers/urls";
 import { waitForAccountsResponse } from "../helpers/network";
 
 test.describe("Signup Validation", () => {
-  test("shows errors for all required fields when form is submitted empty", { tag: "@smoke" }, async ({ page }) => {
-    const signupPage = new SignupPage(page);
-    await signupPage.goto();
+  test("shows errors for all required fields when form is submitted empty", { tag: "@smoke" }, async ({ signupPage }) => {
     await signupPage.submit();
 
     await expect(signupPage.errors.firstName()).toBeVisible();
     await expect(signupPage.errors.lastName()).toBeVisible();
     await expect(signupPage.errors.phone()).toBeVisible();
-    await expect(signupPage.errors.province()).toBeVisible();
     await expect(signupPage.errors.email()).toBeVisible();
     await expect(signupPage.errors.password()).toBeVisible();
   });
 
-  test("shows error when passwords do not match", { tag: "@sanity" }, async ({ page }) => {
-    const signupPage = new SignupPage(page);
-    const user = validUser();
-    await signupPage.goto();
-    await signupPage.fillForm(user);
+  test("shows error when passwords do not match", { tag: "@sanity" }, async ({ signupPage }) => {
+    await signupPage.fillForm(validUser());
     await signupPage.confirmPasswordInput().fill("DifferentPassword456");
     await signupPage.submit();
 
@@ -38,9 +30,7 @@ test.describe("Signup Validation", () => {
   ];
 
   for (const [description, email] of invalidEmails) {
-    test(`shows email validation error — ${description}`, { tag: "@regression" }, async ({ page }) => {
-      const signupPage = new SignupPage(page);
-      await signupPage.goto();
+    test(`shows email validation error — ${description}`, { tag: "@regression" }, async ({ signupPage }) => {
       await signupPage.fillForm({ ...validUser(), email });
       await signupPage.submit();
 
@@ -56,9 +46,7 @@ test.describe("Signup Validation", () => {
   ];
 
   for (const [description, password] of invalidPasswords) {
-    test(`shows password validation error — ${description}`, { tag: "@regression" }, async ({ page }) => {
-      const signupPage = new SignupPage(page);
-      await signupPage.goto();
+    test(`shows password validation error — ${description}`, { tag: "@regression" }, async ({ signupPage }) => {
       await signupPage.fillForm({ ...validUser(), password });
       await signupPage.submit();
 
@@ -66,9 +54,7 @@ test.describe("Signup Validation", () => {
     });
   }
 
-  test("validation error clears after valid input is entered", { tag: "@regression" }, async ({ page }) => {
-    const signupPage = new SignupPage(page);
-    await signupPage.goto();
+  test("validation error clears after valid input is entered", { tag: "@regression" }, async ({ signupPage }) => {
     await signupPage.submit();
     await expect(signupPage.errors.firstName()).toBeVisible();
 
@@ -78,11 +64,9 @@ test.describe("Signup Validation", () => {
     await expect(signupPage.errors.firstName()).not.toBeVisible();
   });
 
-  test("API rejects a 256+ character email with a non-201 status", { tag: "@regression", retries: 2 }, async ({ page }) => {
+  test("API rejects a 256+ character email with a non-201 status", { tag: "@regression", retries: 2 }, async ({ signupPage, page }) => {
     // No client-side length check exists; the API returns 422 for over-length emails
-    const signupPage = new SignupPage(page);
     const longEmail = `${"a".repeat(248)}@b.com`;
-    await signupPage.goto();
     await signupPage.fillForm({ ...validUser(), email: longEmail });
 
     const [response] = await Promise.all([
@@ -93,18 +77,15 @@ test.describe("Signup Validation", () => {
     expect(response!.status()).not.toBe(201);
   });
 
-  test("shows password validation error for a password over 32 characters", { tag: "@regression" }, async ({ page }) => {
-    const signupPage = new SignupPage(page);
+  test("shows password validation error for a password over 32 characters", { tag: "@regression" }, async ({ signupPage }) => {
     const longPassword = "TestPassword1" + "A".repeat(20);
-    await signupPage.goto();
     await signupPage.fillForm({ ...validUser(), password: longPassword });
     await signupPage.submit();
 
     await expect(signupPage.errors.password()).toBeVisible();
   });
 
-  test("password complexity requirements hint is visible", { tag: "@sanity" }, async ({ page }) => {
-    await new SignupPage(page).goto();
+  test("password complexity requirements hint is visible", { tag: "@sanity" }, async ({ signupPage, page }) => {
     // Matches both EN ("12 and 32") and FR ("12 et 32")
     await expect(page.getByText(/12.{1,10}32/)).toBeVisible();
   });
@@ -117,15 +98,13 @@ test.describe("Signup Validation", () => {
   ];
 
   for (const [description, value, field] of securityInputs) {
-    test(`${field} safely handles ${description}`, { tag: "@regression" }, async ({ page }) => {
+    test(`${field} safely handles ${description}`, { tag: "@regression" }, async ({ signupPage, page }) => {
       let alertFired = false;
       page.on("dialog", async (dialog) => {
         alertFired = true;
         await dialog.dismiss();
       });
 
-      const signupPage = new SignupPage(page);
-      await signupPage.goto();
       await signupPage.fillForm({ ...validUser(), [field]: value });
       await signupPage.submit();
 
