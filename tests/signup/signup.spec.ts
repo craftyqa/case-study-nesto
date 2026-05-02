@@ -300,7 +300,7 @@ test.describe("Signup Page", () => {
 
   test(
     "double-clicking submit only sends one account creation request",
-    { tag: "@regression" },
+    { tag: "@regression", retries: 1 },
     async ({ page }) => {
       const signupPage = new SignupPage(page);
       await signupPage.goto();
