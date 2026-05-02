@@ -356,8 +356,9 @@ test.describe("Signup Page", () => {
       await expect(page).toHaveURL(/signup/);
 
       // Now navigate away in the same tab and verify back works
-      await page.goto("/");
-      await page.waitForLoadState();
+      // about:blank creates a clean browser history entry that works reliably
+      // across all browsers without depending on any external URL
+      await page.goto("about:blank");
       await page.goBack();
       await page.waitForURL(/signup/);
       await expect(page).toHaveURL(/signup/);
