@@ -9,14 +9,19 @@ export const test = base.extend<Fixtures>({
     const seed = Date.now();
     faker.seed(seed);
 
+    // Always record the seed as an annotation so any test can be reproduced
+    // from the HTML report, not just failures.
+    const info = base.info();
+    info.annotations.push({ type: 'faker-seed', description: String(seed) });
+
     const sp = new SignupPage(page);
     await sp.goto();
     await use(sp);
 
-    // Attach the seed to the report only on failure so the exact data can be reproduced
-    const info = base.info();
+    // On failure, also print to stdout so the seed is immediately visible
+    // in terminal output and CI logs without opening the HTML report.
     if (info.status !== info.expectedStatus) {
-      await info.attach('faker-seed', { body: String(seed), contentType: 'text/plain' });
+      console.log(`faker seed: ${seed}`);
     }
   },
 });

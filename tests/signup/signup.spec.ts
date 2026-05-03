@@ -2,7 +2,7 @@ import { test, expect } from "../fixtures";
 import { SignupPage } from "../pages/SignupPage";
 import { faker } from "@faker-js/faker";
 import { validUser, SignupUser } from "../fixtures/signup.fixtures";
-import { ACCOUNTS_API } from "../helpers/urls";
+import { ACCOUNTS_API, SIGNUP_URL, FR_SIGNUP_URL, POST_SIGNUP_URL, LOGIN_URL, TERMS_HREF } from "../helpers/urls";
 import { waitForAccountsResponse } from "../helpers/network";
 
 test.describe("Signup Page", () => {
@@ -11,24 +11,31 @@ test.describe("Signup Page", () => {
     { tag: "@smoke" },
     async ({ signupPage, page }) => {
       const user = validUser();
-      await signupPage.fillForm(user);
 
-      const [response] = await Promise.all([
-        waitForAccountsResponse(page),
-        signupPage.submit(),
-      ]);
+      await test.step("fill form", () => signupPage.fillForm(user));
 
-      expect(response!.status()).toBe(201);
+      const response = await test.step("submit and capture API response", async () => {
+        const [resp] = await Promise.all([
+          waitForAccountsResponse(page),
+          signupPage.submit(),
+        ]);
+        return resp;
+      });
 
-      const { account } = await response!.json();
-      expect(account.firstName).toBe(user.firstName);
-      expect(account.lastName).toBe(user.lastName);
-      expect(account.email).toBe(user.email);
-      expect(account.phone).toContain(user.phone);
-      expect(account.region).toBe(user.region);
-      expect(account.leadDistributeConsentAgreement).toBe(false);
+      await test.step("verify API response body", async () => {
+        expect(response!.status()).toBe(201);
+        const { account } = await response!.json();
+        expect(account.firstName).toBe(user.firstName);
+        expect(account.lastName).toBe(user.lastName);
+        expect(account.email).toBe(user.email);
+        expect(account.phone).toContain(user.phone);
+        expect(account.region).toBe(user.region);
+        expect(account.leadDistributeConsentAgreement).toBe(false);
+      });
 
-      await expect(page).toHaveURL(/\/getaquote\/callback/);
+      await test.step("verify redirect to post-signup destination", async () => {
+        await expect(page).toHaveURL(POST_SIGNUP_URL);
+      });
     },
   );
 
@@ -120,7 +127,7 @@ test.describe("Signup Page", () => {
       );
 
       await page.getByTestId("header-language-switch").click();
-      await page.waitForURL(/\/fr\/signup/);
+      await page.waitForURL(FR_SIGNUP_URL);
 
       await expect(page.getByTestId("first-name-input-placeholder")).toHaveText("Prénom");
       await expect(page.getByTestId("last-name-input-placeholder")).toHaveText("Nom");
@@ -251,7 +258,7 @@ test.describe("Signup Page", () => {
     { tag: "@sanity" },
     async ({ signupPage, page }) => {
       // EN: /terms-of-services/  FR: /fr/conditions-d-utilisation/
-      await expect(page.getByTestId("terms-link")).toHaveAttribute("href", /nesto\.ca/);
+      await expect(page.getByTestId("terms-link")).toHaveAttribute("href", TERMS_HREF);
     },
   );
 
@@ -259,17 +266,20 @@ test.describe("Signup Page", () => {
     "submit button is disabled while the API request is in flight",
     { tag: "@regression" },
     async ({ signupPage, page }) => {
-      await signupPage.fillForm(validUser());
+      await test.step("fill form", () => signupPage.fillForm(validUser()));
 
-      await page.route(ACCOUNTS_API, async (route) => {
-        await expect(signupPage.submitButton()).toBeDisabled();
-        await route.continue();
+      const response = await test.step("submit — assert button disabled mid-flight", async () => {
+        await page.route(ACCOUNTS_API, async (route) => {
+          await expect(signupPage.submitButton()).toBeDisabled();
+          await route.continue();
+        });
+        const [resp] = await Promise.all([
+          waitForAccountsResponse(page),
+          signupPage.submit(),
+        ]);
+        return resp;
       });
 
-      const [response] = await Promise.all([
-        waitForAccountsResponse(page),
-        signupPage.submit(),
-      ]);
       expect(response!.status()).toBe(201);
     },
   );
@@ -283,12 +293,14 @@ test.describe("Signup Page", () => {
         if (req.url() === ACCOUNTS_API && req.method() === "POST") postCount++;
       });
 
-      await signupPage.fillForm(validUser());
+      await test.step("fill form", () => signupPage.fillForm(validUser()));
 
-      await Promise.all([
-        waitForAccountsResponse(page),
-        signupPage.submitButton().dblclick(),
-      ]);
+      await test.step("double-click submit", async () => {
+        await Promise.all([
+          waitForAccountsResponse(page),
+          signupPage.submitButton().dblclick(),
+        ]);
+      });
 
       expect(postCount).toBe(1);
     },
@@ -298,17 +310,24 @@ test.describe("Signup Page", () => {
     "checking the consent checkbox sends leadDistributeConsentAgreement as true",
     { tag: "@regression" },
     async ({ signupPage, page }) => {
-      await signupPage.fillForm(validUser());
-      await signupPage.agreementCheckbox().check();
+      await test.step("fill form and check consent checkbox", async () => {
+        await signupPage.fillForm(validUser());
+        await signupPage.agreementCheckbox().check();
+      });
 
-      const [response] = await Promise.all([
-        waitForAccountsResponse(page),
-        signupPage.submit(),
-      ]);
+      const response = await test.step("submit and capture API response", async () => {
+        const [resp] = await Promise.all([
+          waitForAccountsResponse(page),
+          signupPage.submit(),
+        ]);
+        return resp;
+      });
 
-      expect(response!.status()).toBe(201);
-      const { account } = await response!.json();
-      expect(account.leadDistributeConsentAgreement).toBe(true);
+      await test.step("verify consent flag in API response", async () => {
+        expect(response!.status()).toBe(201);
+        const { account } = await response!.json();
+        expect(account.leadDistributeConsentAgreement).toBe(true);
+      });
     },
   );
 
@@ -318,29 +337,32 @@ test.describe("Signup Page", () => {
     async ({ signupPage, page, request }) => {
       const user = validUser();
 
-      // Create the first account directly via API — no browser session needed
-      const setupResponse = await request.post(ACCOUNTS_API, {
-        data: {
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          phone: `+1${user.phone}`,
-          region: user.region,
-          language: 'en',
-          password: user.password,
-          passwordSpecified: true,
-          createdAt: 'LOGIN',
-          leadDistributeConsentAgreement: false,
-        },
+      await test.step("create first account via API", async () => {
+        const setupResponse = await request.post(ACCOUNTS_API, {
+          data: {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            phone: `+1${user.phone}`,
+            region: user.region,
+            language: "en",
+            password: user.password,
+            passwordSpecified: true,
+            createdAt: "LOGIN",
+            leadDistributeConsentAgreement: false,
+          },
+        });
+        expect(setupResponse.status()).toBe(201);
       });
-      expect(setupResponse.status()).toBe(201);
 
-      // Submit the same email through the UI and expect 400
-      await signupPage.fillForm(user);
-      const [dupResponse] = await Promise.all([
-        waitForAccountsResponse(page),
-        signupPage.submit(),
-      ]);
+      const dupResponse = await test.step("submit duplicate email via UI", async () => {
+        await signupPage.fillForm(user);
+        const [resp] = await Promise.all([
+          waitForAccountsResponse(page),
+          signupPage.submit(),
+        ]);
+        return resp;
+      });
 
       expect(dupResponse!.status()).toBe(400);
     },
@@ -350,23 +372,23 @@ test.describe("Signup Page", () => {
     "browser back button returns to the signup page",
     { tag: "@regression" },
     async ({ signupPage, page }) => {
-      // Navigate away using the Terms link (stays within nesto.ca, so goBack() is reliable)
-      const [termsPage] = await Promise.all([
-        page.context().waitForEvent("page"),
-        page.getByTestId("terms-link").click(),
-      ]);
-      await termsPage.close();
+      await test.step("verify Terms link opens new tab without leaving signup", async () => {
+        const [termsPage] = await Promise.all([
+          page.context().waitForEvent("page"),
+          page.getByTestId("terms-link").click(),
+        ]);
+        await termsPage.close();
+        await expect(page).toHaveURL(SIGNUP_URL);
+      });
 
-      // Terms opens in a new tab — the original page is still on signup
-      await expect(page).toHaveURL(/signup/);
-
-      // Now navigate away in the same tab and verify back works
-      // about:blank creates a clean browser history entry that works reliably
-      // across all browsers without depending on any external URL
-      await page.goto("about:blank");
-      await page.goBack();
-      await page.waitForURL(/signup/);
-      await expect(page).toHaveURL(/signup/);
+      await test.step("navigate away and return via back button", async () => {
+        // about:blank creates a clean browser history entry that works reliably
+        // across all browsers without depending on any external URL
+        await page.goto("about:blank");
+        await page.goBack();
+        await page.waitForURL(SIGNUP_URL);
+        await expect(page).toHaveURL(SIGNUP_URL);
+      });
     },
   );
 
@@ -374,17 +396,19 @@ test.describe("Signup Page", () => {
     "both login links navigate to the login page",
     { tag: "@sanity" },
     async ({ signupPage, page }) => {
-      const loginUrl = /auth\.nesto\.ca\/login/;
+      await test.step("header login button navigates to login", async () => {
+        await page.getByTestId("header-login-button").click();
+        await page.waitForURL(LOGIN_URL);
+        await expect(page).toHaveURL(LOGIN_URL);
+      });
 
-      await page.getByTestId("header-login-button").click();
-      await page.waitForURL(loginUrl);
-      await expect(page).toHaveURL(loginUrl);
-
-      await signupPage.goto();
-      await page.getByTestId("login-link").scrollIntoViewIfNeeded();
-      await page.getByTestId("login-link").click();
-      await page.waitForURL(loginUrl);
-      await expect(page).toHaveURL(loginUrl);
+      await test.step("footer login link navigates to login", async () => {
+        await signupPage.goto();
+        await page.getByTestId("login-link").scrollIntoViewIfNeeded();
+        await page.getByTestId("login-link").click();
+        await page.waitForURL(LOGIN_URL);
+        await expect(page).toHaveURL(LOGIN_URL);
+      });
     },
   );
 });
