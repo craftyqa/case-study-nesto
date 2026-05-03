@@ -27,7 +27,7 @@ jobs:
         run: npx playwright test --grep "@smoke|@sanity|@regression"
         env:
           BASE_URL: ${{ vars.BASE_URL || 'https://app.qa.nesto.ca' }}
-      - uses: actions/upload-artifact@v3.2.2
+      - uses: actions/upload-artifact@v7.0.1
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
