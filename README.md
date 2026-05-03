@@ -114,10 +114,12 @@ tests/
 │   ├── signup.spec.ts               # @smoke + @sanity + @regression — core, labels, happy path, API
 │   ├── signup-validation.spec.ts    # @smoke + @sanity + @regression — validation and error cases
 │   ├── signup-accessibility.spec.ts # @sanity + @regression — aria, keyboard nav, WCAG contrast
-│   └── signup-mobile.spec.ts        # @sanity — layout and field reachability at 375px viewport
+│   ├── signup-mobile.spec.ts        # @sanity — layout at 375px, landscape (812×375), and 768px tablet
+│   └── signup-visual.spec.ts        # @regression — pixel snapshot tests (requires baseline generation)
 ├── pages/
 │   └── SignupPage.ts                # Page Object Model for the signup page
 ├── fixtures/
+│   ├── index.ts                     # Extended Playwright test with signupPage fixture + faker seed
 │   └── signup.fixtures.ts           # Test data factory (validUser())
 └── signup-test-plan.md              # Full test plan with all 87 test cases
 ```
@@ -133,4 +135,20 @@ All locators use `data-testid` attributes for resilience against markup changes.
 
 ### Test Fixtures
 
-`validUser()` (`tests/fixtures/signup.fixtures.ts`) returns a `SignupUser` with a unique email on every call (`Date.now()`), preventing duplicate-account failures on repeated runs.
+`tests/fixtures/index.ts` exports an extended `test` object used by all spec files. It provides:
+
+- **`signupPage` fixture** — instantiates `SignupPage` and navigates to `/signup` before each test body runs, eliminating per-test navigation boilerplate
+- **Faker seed** — calls `faker.seed()` with a unique value before each test so all randomly generated data is reproducible
+
+`validUser()` (`tests/fixtures/signup.fixtures.ts`) returns a `SignupUser` with a UUID-based unique email on every call, preventing duplicate-account failures across parallel workers.
+
+### Reproducing a failure
+
+When a test fails, the faker seed used during that run is attached to the test in the HTML report:
+
+```bash
+npx playwright show-report
+# Open the failed test → Attachments → faker-seed
+```
+
+To reproduce the exact same data locally, call `faker.seed(<value>)` at the top of the test (or temporarily hardcode it in `tests/fixtures/index.ts`) before re-running.

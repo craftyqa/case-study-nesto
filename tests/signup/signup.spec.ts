@@ -28,7 +28,7 @@ test.describe("Signup Page", () => {
       expect(account.region).toBe(user.region);
       expect(account.leadDistributeConsentAgreement).toBe(false);
 
-      await expect(page).not.toHaveURL(/\/signup$/);
+      await expect(page).toHaveURL(/\/getaquote\/callback/);
     },
   );
 
