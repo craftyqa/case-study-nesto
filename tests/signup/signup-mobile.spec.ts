@@ -25,8 +25,8 @@ test.describe('Signup Page — Mobile (375px)', () => {
 
     for (const field of fields) {
       await field.scrollIntoViewIfNeeded();
-      await expect(field).toBeVisible();
-      await expect(field).toBeEnabled();
+      await expect.soft(field).toBeVisible();
+      await expect.soft(field).toBeEnabled();
     }
   });
 
@@ -70,8 +70,8 @@ test.describe('Signup Page — Tablet (768px)', () => {
 
     for (const field of fields) {
       await field.scrollIntoViewIfNeeded();
-      await expect(field).toBeVisible();
-      await expect(field).toBeEnabled();
+      await expect.soft(field).toBeVisible();
+      await expect.soft(field).toBeEnabled();
     }
   });
 

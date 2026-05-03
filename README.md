@@ -26,7 +26,7 @@ Tests are tagged into three tiers. Use `--grep` to run a specific tier:
 |---|---|---|---|
 | `@smoke` | 5 | Page loads, form renders, core signup flow, required-field errors | ~10s |
 | `@sanity` | 17 | Labels, UI elements, language switch, key validations, a11y basics, mobile layout | ~15s |
-| `@regression` | 23 | All email/password variants, boundary values, security inputs, API edge cases, keyboard nav, WCAG | ~40s |
+| `@regression` | 29 | All email/password variants, boundary values, security inputs, API edge cases, keyboard nav, WCAG, visual snapshots | ~40s |
 
 ```bash
 npx playwright test --grep @smoke
@@ -121,6 +121,9 @@ tests/
 ├── fixtures/
 │   ├── index.ts                     # Extended Playwright test with signupPage fixture + faker seed
 │   └── signup.fixtures.ts           # Test data factory (validUser())
+├── helpers/
+│   ├── urls.ts                      # All URL constants and patterns (ACCOUNTS_API, LOGIN_URL, etc.)
+│   └── network.ts                   # waitForAccountsResponse() helper (WebKit-safe response capture)
 └── signup-test-plan.md              # Full test plan with all 87 test cases
 ```
 
@@ -144,11 +147,17 @@ All locators use `data-testid` attributes for resilience against markup changes.
 
 ### Reproducing a failure
 
-When a test fails, the faker seed used during that run is attached to the test in the HTML report:
+When a test fails, the faker seed is printed directly to the terminal output:
+
+```
+faker seed: 1777768742430
+```
+
+It is also recorded as an annotation on every test and visible in the HTML report under the test's detail view (Annotations tab), regardless of pass or fail:
 
 ```bash
 npx playwright show-report
-# Open the failed test → Attachments → faker-seed
+# Open any test → Annotations → faker-seed
 ```
 
 To reproduce the exact same data locally, call `faker.seed(<value>)` at the top of the test (or temporarily hardcode it in `tests/fixtures/index.ts`) before re-running.

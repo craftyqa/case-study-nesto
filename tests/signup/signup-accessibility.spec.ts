@@ -16,7 +16,7 @@ test.describe('Signup Accessibility', () => {
     ];
 
     for (const field of fields) {
-      await expect(field).toHaveAccessibleName(/.+/);
+      await expect.soft(field).toHaveAccessibleName(/.+/);
     }
   });
 
@@ -33,8 +33,8 @@ test.describe('Signup Accessibility', () => {
     ];
 
     for (const error of errors) {
-      await expect(error).toBeVisible();
-      await expect(error).toHaveAttribute('aria-live', 'polite');
+      await expect.soft(error).toBeVisible();
+      await expect.soft(error).toHaveAttribute('aria-live', 'polite');
     }
   });
 

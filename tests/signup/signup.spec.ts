@@ -85,34 +85,34 @@ test.describe("Signup Page", () => {
     await expect(page.locator('img[alt="nesto"]')).toBeVisible();
   });
 
-  test("all form labels are visible", { tag: "@sanity" }, async ({ signupPage, page }) => {
-    await expect(page.getByTestId("first-name-input-placeholder")).toBeVisible();
-    await expect(page.getByTestId("last-name-input-placeholder")).toBeVisible();
-    await expect(page.getByTestId("input-placeholder")).toBeVisible();
-    await expect(page.getByTestId("select-placeholder")).toBeVisible();
-    await expect(page.getByTestId("email-input-placeholder")).toBeVisible();
-    await expect(page.getByTestId("password-input-placeholder")).toBeVisible();
-    await expect(page.getByTestId("passwordConfirmation-input-placeholder")).toBeVisible();
-    await expect(page.getByTestId("terms-link")).toBeVisible();
-    await expect(page.getByTestId("login-link")).toBeVisible();
-  });
-
-  // EN-only: on FR projects the default language is already French
   test(
-    "all labels render in English by default",
+    "form renders with correct labels, placeholders, and button text",
     { tag: "@sanity" },
     async ({ signupPage, page, baseURL }) => {
-      test.skip(
-        (baseURL ?? "").includes("/fr"),
-        "Default language on FR projects is French, not English",
-      );
+      const isFr = (baseURL ?? "").includes("/fr");
 
-      await expect(page.getByTestId("first-name-input-placeholder")).toHaveText("First name");
-      await expect(page.getByTestId("last-name-input-placeholder")).toHaveText("Last name");
-      await expect(page.getByTestId("email-input-placeholder")).toHaveText("Email");
-      await expect(page.getByTestId("password-input-placeholder")).toHaveText("Password");
-      await expect(page.getByTestId("passwordConfirmation-input-placeholder")).toHaveText("Confirm password");
-      await expect(page.getByTestId("select-placeholder")).toHaveText("Province of purchase");
+      await expect(page.getByTestId("first-name-input-placeholder")).toHaveText(isFr ? "Prénom" : "First name");
+      await expect(page.getByTestId("last-name-input-placeholder")).toHaveText(isFr ? "Nom" : "Last name");
+      await expect(page.getByTestId("email-input-placeholder")).toHaveText(isFr ? "Courriel" : "Email");
+      await expect(page.getByTestId("password-input-placeholder")).toHaveText(isFr ? "Mot de passe" : "Password");
+      await expect(page.getByTestId("passwordConfirmation-input-placeholder")).toHaveText(isFr ? "Confirmation du mot de passe" : "Confirm password");
+      await expect(page.getByTestId("select-placeholder")).toHaveText(isFr ? "Province de l'achat" : "Province of purchase");
+      await expect(page.getByTestId("input-placeholder")).toBeVisible(); // phone label — testid too generic for text check
+      await expect(page.getByTestId("terms-link")).toBeVisible();
+      await expect(page.getByTestId("login-link")).toBeVisible();
+      await expect(signupPage.submitButton()).toHaveText(isFr ? "Créez votre compte" : "Create your account");
+
+      const inputs = [
+        signupPage.firstNameInput(),
+        signupPage.lastNameInput(),
+        signupPage.phoneInput(),
+        signupPage.emailInput(),
+        signupPage.passwordInput(),
+        signupPage.confirmPasswordInput(),
+      ];
+      for (const input of inputs) {
+        await expect.soft(input).toHaveAttribute("placeholder", /.+/);
+      }
     },
   );
 
@@ -154,39 +154,9 @@ test.describe("Signup Page", () => {
       ];
 
       for (const field of fields) {
-        await expect(field).toBeVisible();
-        await expect(field).toBeEnabled();
+        await expect.soft(field).toBeVisible();
+        await expect.soft(field).toBeEnabled();
       }
-    },
-  );
-
-  test(
-    "all input fields have placeholder text when empty",
-    { tag: "@sanity" },
-    async ({ signupPage }) => {
-      const inputs = [
-        signupPage.firstNameInput(),
-        signupPage.lastNameInput(),
-        signupPage.phoneInput(),
-        signupPage.emailInput(),
-        signupPage.passwordInput(),
-        signupPage.confirmPasswordInput(),
-      ];
-
-      for (const input of inputs) {
-        await expect(input).toHaveAttribute("placeholder", /.+/);
-      }
-    },
-  );
-
-  test(
-    "submit button label is correct",
-    { tag: "@sanity" },
-    async ({ signupPage, baseURL }) => {
-      const expected = (baseURL ?? "").includes("/fr")
-        ? "Créez votre compte"
-        : "Create your account";
-      await expect(signupPage.submitButton()).toHaveText(expected);
     },
   );
 
