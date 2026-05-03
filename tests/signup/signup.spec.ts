@@ -315,23 +315,27 @@ test.describe("Signup Page", () => {
   test(
     "duplicate email returns 400 from the account creation API",
     { tag: "@regression" },
-    async ({ signupPage, page, browser }) => {
+    async ({ signupPage, page, request }) => {
       const user = validUser();
 
-      // Create the account in a separate, isolated context so the main page
-      // never gets an auth session and can load the signup form freely
-      const isolatedCtx = await browser.newContext();
-      const isolatedPage = await isolatedCtx.newPage();
-      const isolatedSignup = new SignupPage(isolatedPage);
-      await isolatedSignup.goto();
-      await isolatedSignup.fillForm(user);
-      await Promise.all([
-        waitForAccountsResponse(isolatedPage),
-        isolatedSignup.submit(),
-      ]);
-      await isolatedCtx.close();
+      // Create the first account directly via API — no browser session needed
+      const setupResponse = await request.post(ACCOUNTS_API, {
+        data: {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          phone: `+1${user.phone}`,
+          region: user.region,
+          language: 'en',
+          password: user.password,
+          passwordSpecified: true,
+          createdAt: 'LOGIN',
+          leadDistributeConsentAgreement: false,
+        },
+      });
+      expect(setupResponse.status()).toBe(201);
 
-      // Main page has no auth state — submit the same email and expect 400
+      // Submit the same email through the UI and expect 400
       await signupPage.fillForm(user);
       const [dupResponse] = await Promise.all([
         waitForAccountsResponse(page),
