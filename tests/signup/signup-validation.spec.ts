@@ -138,7 +138,7 @@ test.describe("Signup Validation", () => {
 
       await signupPage.fillForm({ ...validUser(), [field]: value });
       await signupPage.submit();
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("load");
 
       expect(alertFired).toBe(false);
 
