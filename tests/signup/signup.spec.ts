@@ -227,7 +227,6 @@ test.describe("Signup Page", () => {
     "Terms of Service link points to nesto.ca",
     { tag: "@sanity" },
     async ({ signupPage, page }) => {
-      // EN: /terms-of-services/  FR: /fr/conditions-d-utilisation/
       await expect(page.getByTestId("terms-link")).toHaveAttribute("href", TERMS_HREF);
     },
   );

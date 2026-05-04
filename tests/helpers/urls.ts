@@ -6,4 +6,4 @@ export const SIGNUP_URL      = /signup/;
 export const FR_SIGNUP_URL   = /\/fr\/signup/;
 export const POST_SIGNUP_URL = /\/getaquote\/callback/;
 export const LOGIN_URL       = /auth\.nesto\.ca\/login/;
-export const TERMS_HREF      = /nesto\.ca/;
+export const TERMS_HREF      = /www\.nesto\.ca\/(terms-of-services|fr\/conditions-d-utilisation)\//;

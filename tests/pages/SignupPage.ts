@@ -2,7 +2,7 @@ import { Page } from '@playwright/test';
 import { SignupUser } from '../fixtures/signup.fixtures';
 
 export class SignupPage {
-  readonly url = 'signup';
+  readonly url = '/signup';
 
   readonly firstNameInput = () => this.page.getByTestId('first-name-input');
   readonly lastNameInput = () => this.page.getByTestId('last-name-input');

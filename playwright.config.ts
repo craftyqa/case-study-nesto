@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from "@playwright/test";
 
 /**
  * Read environment variables from file.
@@ -11,10 +11,10 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
-const BASE_URL = process.env.BASE_URL ?? 'https://app.qa.nesto.ca';
+const BASE_URL = process.env.BASE_URL ?? "https://app.qa.nesto.ca";
 
 export default defineConfig({
-  testDir: './tests',
+  testDir: "./tests",
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -24,42 +24,42 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : 4,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
+  reporter: "html",
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
     // baseURL: 'http://localhost:3000',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
+    trace: "retain-on-failure",
+    screenshot: "only-on-failure",
   },
 
   /* Configure projects for major browsers × locales */
   projects: [
     {
-      name: 'EN | Chrome',
-      use: { ...devices['Desktop Chrome'], baseURL: BASE_URL },
+      name: "EN | Chrome",
+      use: { ...devices["Desktop Chrome"], baseURL: BASE_URL },
     },
     {
-      name: 'EN | Firefox',
-      use: { ...devices['Desktop Firefox'], baseURL: BASE_URL },
+      name: "EN | Firefox",
+      use: { ...devices["Desktop Firefox"], baseURL: BASE_URL },
     },
     {
-      name: 'EN | Safari',
-      use: { ...devices['Desktop Safari'], baseURL: BASE_URL },
+      name: "EN | Safari",
+      use: { ...devices["Desktop Safari"], baseURL: BASE_URL },
     },
     {
-      name: 'FR | Chrome',
-      use: { ...devices['Desktop Chrome'], baseURL: `${BASE_URL}/fr/` },
+      name: "FR | Chrome",
+      use: { ...devices["Desktop Chrome"], baseURL: `${BASE_URL}/fr/` },
     },
     {
-      name: 'FR | Firefox',
-      use: { ...devices['Desktop Firefox'], baseURL: `${BASE_URL}/fr/` },
+      name: "FR | Firefox",
+      use: { ...devices["Desktop Firefox"], baseURL: `${BASE_URL}/fr/` },
     },
     {
-      name: 'FR | Safari',
-      use: { ...devices['Desktop Safari'], baseURL: `${BASE_URL}/fr/` },
+      name: "FR | Safari",
+      use: { ...devices["Desktop Safari"], baseURL: `${BASE_URL}/fr/` },
     },
   ],
 
