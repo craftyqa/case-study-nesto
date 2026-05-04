@@ -1,16 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
 
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
-
-/**
- * See https://playwright.dev/docs/test-configuration.
- */
 const BASE_URL = process.env.BASE_URL ?? "https://app.qa.nesto.ca";
 
 export default defineConfig({
@@ -21,8 +10,11 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : 4,
+  // 4 workers locally and on CI — tests are isolated (UUID emails, no shared state).
+  // When the suite grows past ~150 tests, add sharding instead:
+  //   npx playwright test --shard=1/3  (split across 3 matrix jobs in the workflow)
+  //   npx playwright merge-reports     (merge shard artifacts into one HTML report)
+  workers: 4,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: "html",
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
@@ -60,10 +52,4 @@ export default defineConfig({
     },
   ],
 
-  /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   url: 'http://localhost:3000',
-  //   reuseExistingServer: !process.env.CI,
-  // },
 });
