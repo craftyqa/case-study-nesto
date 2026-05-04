@@ -25,8 +25,8 @@ Tests are tagged into three tiers. Use `--grep` to run a specific tier:
 | Tag | Count | Purpose | Typical runtime |
 |---|---|---|---|
 | `@smoke` | 5 | Page loads, form renders, core signup flow, required-field errors | ~10s |
-| `@sanity` | 17 | Labels, UI elements, language switch, key validations, a11y basics, mobile layout | ~15s |
-| `@regression` | 27 | All email/password variants, boundary values, security inputs, API edge cases, keyboard nav, WCAG | ~40s |
+| `@sanity` | 19 | Labels, UI elements, language switch, key validations, a11y basics, mobile layout | ~60s |
+| `@regression` | 27 | All email/password variants, boundary values, security inputs, API edge cases, keyboard nav, WCAG | ~8m |
 | `@visual` | 2 | Pixel snapshot tests — requires committed baselines, run separately (see below) | ~5s |
 
 ```bash
@@ -93,11 +93,11 @@ Each test runs against both the English and French versions of the site. This is
 | `EN | Chrome` | `https://app.qa.nesto.ca` |
 | `EN | Firefox` | `https://app.qa.nesto.ca` |
 | `EN | Safari` | `https://app.qa.nesto.ca` |
-| `FR | Chrome` | `https://app.qa.nesto.ca/fr` |
-| `FR | Firefox` | `https://app.qa.nesto.ca/fr` |
-| `FR | Safari` | `https://app.qa.nesto.ca/fr` |
+| `FR | Chrome` | `https://app.qa.nesto.ca/fr/` |
+| `FR | Firefox` | `https://app.qa.nesto.ca/fr/` |
+| `FR | Safari` | `https://app.qa.nesto.ca/fr/` |
 
-No test code changes are needed to support both locales. The `SignupPage` uses a relative URL (`/signup`) which Playwright resolves against the project's `baseURL` at runtime. Province selection uses the option `value` attribute (e.g. `QC`) rather than the visible label text, so it works regardless of language.
+No test code changes are needed to support both locales. The `SignupPage` uses a relative URL (`signup`) which Playwright resolves against the project's `baseURL` at runtime. Province selection uses the option `value` attribute (e.g. `QC`) rather than the visible label text, so it works regardless of language.
 
 ### Visual regression tests
 
