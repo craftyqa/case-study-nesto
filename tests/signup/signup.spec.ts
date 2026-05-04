@@ -138,6 +138,30 @@ test.describe("Signup Page", () => {
     },
   );
 
+  // FR→EN only: skip on EN projects where the page already starts in English
+  test(
+    "labels render in English after clicking the language switch",
+    { tag: "@sanity" },
+    async ({ signupPage, page, baseURL }) => {
+      test.skip(
+        !(baseURL ?? "").includes("/fr"),
+        "FR→EN switch only applies to FR projects",
+      );
+
+      await page.getByTestId("header-language-switch").click();
+      // SIGNUP_URL (/signup/) matches the current /fr/signup, so use a predicate
+      // that requires the /fr/ segment to be gone before resolving.
+      await page.waitForURL(url => url.href.includes("/signup") && !url.href.includes("/fr/"));
+
+      await expect(page.getByTestId("first-name-input-placeholder")).toHaveText("First name");
+      await expect(page.getByTestId("last-name-input-placeholder")).toHaveText("Last name");
+      await expect(page.getByTestId("email-input-placeholder")).toHaveText("Email");
+      await expect(page.getByTestId("password-input-placeholder")).toHaveText("Password");
+      await expect(page.getByTestId("passwordConfirmation-input-placeholder")).toHaveText("Confirm password");
+      await expect(page.getByTestId("select-placeholder")).toHaveText("Province of purchase");
+    },
+  );
+
   test(
     "all form fields are visible and enabled",
     { tag: "@smoke" },
