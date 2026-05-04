@@ -6,7 +6,8 @@ type Fixtures = { signupPage: SignupPage };
 
 export const test = base.extend<Fixtures>({
   signupPage: async ({ page }, use) => {
-    const seed = Date.now();
+    // workerIndex offset prevents same-millisecond seed collisions across parallel workers
+    const seed = Date.now() + base.info().workerIndex * 1_000_000_000;
     faker.seed(seed);
 
     // Always record the seed as an annotation so any test can be reproduced
