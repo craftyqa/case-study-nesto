@@ -66,10 +66,12 @@ The fixture also seeds `faker` per test and records the seed as a test annotatio
 
 ## Visual regression tests
 
-Snapshots live in `tests/signup/signup-visual.spec.ts-snapshots/`. They must be generated once before the tests can pass:
+Visual tests use the `@visual` tag and are **excluded from the standard CI pass** (`@smoke|@sanity|@regression`). They need OS-specific baselines — CI runs on Linux so baselines must be generated on Linux. Locally generated `-windows.png` baselines won't match CI's expected `-linux.png` paths.
+
+Generate Linux baselines in CI or a Linux environment with `--update-snapshots`, commit the output, then run normally:
 
 ```bash
-npx playwright test signup-visual --update-snapshots --project="EN | Chrome"
+npx playwright test --grep "@visual" --update-snapshots --project="EN | Chrome"
+git add tests/signup/signup-visual.spec.ts-snapshots/
+git commit -m "chore: add visual test baselines"
 ```
-
-Commit the generated snapshot files alongside the spec.

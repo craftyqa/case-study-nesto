@@ -26,7 +26,8 @@ Tests are tagged into three tiers. Use `--grep` to run a specific tier:
 |---|---|---|---|
 | `@smoke` | 5 | Page loads, form renders, core signup flow, required-field errors | ~10s |
 | `@sanity` | 17 | Labels, UI elements, language switch, key validations, a11y basics, mobile layout | ~15s |
-| `@regression` | 29 | All email/password variants, boundary values, security inputs, API edge cases, keyboard nav, WCAG, visual snapshots | ~40s |
+| `@regression` | 27 | All email/password variants, boundary values, security inputs, API edge cases, keyboard nav, WCAG | ~40s |
+| `@visual` | 2 | Pixel snapshot tests — requires committed baselines, run separately (see below) | ~5s |
 
 ```bash
 npx playwright test --grep @smoke
@@ -97,6 +98,27 @@ Each test runs against both the English and French versions of the site. This is
 | `FR | Safari` | `https://app.qa.nesto.ca/fr` |
 
 No test code changes are needed to support both locales. The `SignupPage` uses a relative URL (`/signup`) which Playwright resolves against the project's `baseURL` at runtime. Province selection uses the option `value` attribute (e.g. `QC`) rather than the visible label text, so it works regardless of language.
+
+### Visual regression tests
+
+Visual tests use a dedicated `@visual` tag and are excluded from the standard CI pass. They require OS-specific baseline images — CI runs on Linux, so baselines must also be generated on Linux. Locally generated baselines (with a `-windows.png` suffix) won't match what CI expects (`-linux.png`).
+
+**To generate Linux-compatible baselines**, run the update step inside the CI environment and commit the output:
+
+```bash
+# Generate baselines (run in CI or a Linux environment)
+npx playwright test --grep "@visual" --update-snapshots --project="EN | Chrome"
+
+# Commit the generated snapshot files
+git add tests/signup/signup-visual.spec.ts-snapshots/
+git commit -m "chore: add visual test baselines"
+```
+
+Once baselines are committed, run visual tests with:
+
+```bash
+npx playwright test --grep "@visual"
+```
 
 ## Viewing the HTML Report
 
