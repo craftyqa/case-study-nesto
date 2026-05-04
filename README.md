@@ -146,7 +146,6 @@ tests/
 ├── helpers/
 │   ├── urls.ts                      # All URL constants and patterns (ACCOUNTS_API, LOGIN_URL, etc.)
 │   └── network.ts                   # waitForAccountsResponse() helper (WebKit-safe response capture)
-└── signup-test-plan.md              # Full test plan with all 87 test cases
 ```
 
 ### Page Object Model

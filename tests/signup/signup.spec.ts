@@ -304,8 +304,12 @@ test.describe("Signup Page", () => {
   test(
     "duplicate email returns 400 from the account creation API",
     { tag: "@regression" },
-    async ({ signupPage, page, request }) => {
+    async ({ signupPage, page, request, baseURL }) => {
       const user = validUser();
+      const isFr = (baseURL ?? '').includes('/fr');
+      const toastError = isFr
+        ? "Quelque chose n'a pas fonctionné! Veuillez réessayer et si vous avez toujours des problèmes, n'hésitez pas à contacter votre conseiller"
+        : "Something went wrong! Please try again and if you continue to have trouble feel free to contact your advisor";
 
       await test.step("create first account via API", async () => {
         const setupResponse = await request.post(ACCOUNTS_API, {
@@ -334,7 +338,11 @@ test.describe("Signup Page", () => {
         return resp;
       });
 
-      expect(dupResponse!.status()).toBe(400);
+      await test.step("verify API 400, error toast shown, page stays on signup", async () => {
+        expect(dupResponse!.status()).toBe(400);
+        await expect(page).toHaveURL(SIGNUP_URL);
+        await expect(page.locator('[role=alert]').first()).toHaveText(toastError);
+      });
     },
   );
 
