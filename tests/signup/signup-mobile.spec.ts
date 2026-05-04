@@ -43,6 +43,25 @@ test.describe('Signup Page — Mobile Landscape (812×375)', () => {
     expect(hasHorizontalOverflow).toBe(false);
   });
 
+  test('all form fields and submit button are visible and enabled in landscape orientation', { tag: '@sanity' }, async ({ signupPage }) => {
+    const fields = [
+      signupPage.firstNameInput(),
+      signupPage.lastNameInput(),
+      signupPage.phoneInput(),
+      signupPage.provinceSelect(),
+      signupPage.emailInput(),
+      signupPage.passwordInput(),
+      signupPage.confirmPasswordInput(),
+      signupPage.submitButton(),
+    ];
+
+    for (const field of fields) {
+      await field.scrollIntoViewIfNeeded();
+      await expect.soft(field).toBeVisible();
+      await expect.soft(field).toBeEnabled();
+    }
+  });
+
 });
 
 test.describe('Signup Page — Tablet (768px)', () => {

@@ -1,6 +1,7 @@
 import { test, expect } from "../fixtures";
 import { validUser } from "../fixtures/signup.fixtures";
 import { waitForAccountsResponse } from "../helpers/network";
+import { ACCOUNTS_API } from "../helpers/urls";
 
 type ErrorKey = 'required' | 'phone' | 'email' | 'passwordMin' | 'passwordMax' | 'passwordComplex' | 'confirmPassword';
 
@@ -126,10 +127,28 @@ test.describe("Signup Validation", () => {
         await dialog.dismiss();
       });
 
+      // Capture API response non-blocking: some inputs (e.g. XSS) are stripped
+      // client-side so no request is ever sent; others (e.g. SQL injection) reach
+      // the API and are stored as literal strings.
+      let apiStatus: number | null = null;
+      page.on("response", res => {
+        if (res.url() === ACCOUNTS_API && res.request().method() === "POST")
+          apiStatus = res.status();
+      });
+
       await signupPage.fillForm({ ...validUser(), [field]: value });
       await signupPage.submit();
+      await page.waitForLoadState("networkidle");
 
       expect(alertFired).toBe(false);
+
+      // When the input reached the API, the server must not have crashed
+      if (apiStatus !== null) {
+        expect(apiStatus).toBeLessThan(500);
+      }
+
+      // The payload must not be present as an injected executable script element
+      await expect(page.locator("script").filter({ hasText: /alert\(/ })).toHaveCount(0);
     });
   }
 });
